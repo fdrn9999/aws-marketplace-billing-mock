@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: marketplace-billing
+
+server:
+  port: 8080
+
+app:
+  # Enables demo-only endpoints (/api/admin/**, /mock-aws/_sim/**). Disable outside local demos.
+  demo-mode: true
+  # Where the Fulfillment URL redirects the buyer. Empty = relative redirect (same origin as the request).
+  web-base-url: ""
+  mock-aws:
+    # Base URL of the mock AWS Marketplace APIs. Empty = this server (http://localhost:${server.port}).
+    base-url: ""
+    registration-token-ttl: 1h
+  entitlement:
+    # Re-sync entitlements from GetEntitlements when the cached copy is older than this.
+    refresh-after: 15m
+    # When GetEntitlements is unavailable, a cached copy is trusted for at most this long (fail-closed after).
+    max-staleness: 24h
+  metering:
+    batch-size: 25
+    max-attempts: 5
+    call-retries: 3
+    zero-usage-backfill-hours: 3
+    # AWS rejects usage records 24 hours or more after the event.
+    max-record-age: 24h
+    # Periodic run interval. 0 = disabled (run from the dashboard / admin API).
+    auto-run-interval: 0s

@@ -1,0 +1,27 @@
+# dependencies / build outputs
+node_modules/
+dist/
+build/
+.gradle/
+out/
+
+# test artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# env / local
+.env
+.env.*
+!.env.example
+*.log
+.fablize/
+
+# IDE / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+.DS_Store
+Thumbs.db

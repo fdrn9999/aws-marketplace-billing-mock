@@ -1,0 +1,21 @@
+{
+  "name": "aws-marketplace-billing-mock",
+  "private": true,
+  "description": "AWS Marketplace SaaS billing/subscription integration with mock AWS APIs (Spring Boot + Vue 3)",
+  "scripts": {
+    "setup": "npm install && npm --prefix frontend install",
+    "dev": "concurrently -k -n api,web -c blue,green \"node scripts/gradlew.mjs bootRun\" \"npm --prefix frontend run dev\"",
+    "dev:api": "node scripts/gradlew.mjs bootRun",
+    "dev:web": "npm --prefix frontend run dev",
+    "test": "node scripts/gradlew.mjs test",
+    "build": "node scripts/gradlew.mjs build && npm --prefix frontend run build",
+    "e2e": "playwright test",
+    "screenshots": "playwright test --grep @screenshots"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
