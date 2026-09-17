@@ -60,7 +60,9 @@ public record SubscriptionView(
                         e.isActiveAt(now)))
                 .toList();
         Instant expiresAt = evaluation.expiresAt();
-        Long daysLeft = expiresAt == null ? null : Math.max(0, Duration.between(now, expiresAt).toDays());
+        // 남은 일수는 올림으로 표시한다 (5일 23시간 남음 → 6일)
+        Long daysLeft = expiresAt == null ? null
+                : Math.max(0, (Duration.between(now, expiresAt).getSeconds() + 86_399) / 86_400);
         boolean expiringSoon = expiresAt != null && Duration.between(now, expiresAt).compareTo(EXPIRING_SOON) <= 0;
         return new SubscriptionView(context.customerId(), true, s.getCompanyName(), s.getCustomerAWSAccountId(),
                 s.getLicenseArn(), ProductView.of(context.product()), evaluation.status(), evaluation.reason(),
