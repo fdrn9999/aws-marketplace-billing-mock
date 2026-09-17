@@ -44,10 +44,12 @@ public class AppSeedLoader implements SeedLoader {
     private final UsageEventRepository usageEvents;
     private final MeteringRecordRepository meteringRecords;
     private final OnboardingSessionRepository onboardingSessions;
+    private final IdempotencyRepository idempotency;
 
     public AppSeedLoader(JsonMapper jsonMapper, SimulatedClock clock, ProductRepository products,
             SubscriberRepository subscribers, UsageEventRepository usageEvents,
-            MeteringRecordRepository meteringRecords, OnboardingSessionRepository onboardingSessions) {
+            MeteringRecordRepository meteringRecords, OnboardingSessionRepository onboardingSessions,
+            IdempotencyRepository idempotency) {
         this.jsonMapper = jsonMapper;
         this.clock = clock;
         this.products = products;
@@ -55,6 +57,7 @@ public class AppSeedLoader implements SeedLoader {
         this.usageEvents = usageEvents;
         this.meteringRecords = meteringRecords;
         this.onboardingSessions = onboardingSessions;
+        this.idempotency = idempotency;
     }
 
     @Override
@@ -70,6 +73,7 @@ public class AppSeedLoader implements SeedLoader {
 
         usageEvents.clear();
         meteringRecords.clear();
+        idempotency.clear();
         Map<String, MeteringRecord> buckets = new LinkedHashMap<>();
         for (UsageEventSeed seed : read("usage-events.json", new TypeReference<List<UsageEventSeed>>() { })) {
             Subscriber subscriber = subscribers.findById(seed.subscriberId())

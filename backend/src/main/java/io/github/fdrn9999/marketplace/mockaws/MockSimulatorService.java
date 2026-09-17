@@ -101,6 +101,17 @@ public class MockSimulatorService {
                 license.licenseArn, accountId, listing.productCode(), token.expiresAt, delivered);
     }
 
+    /** 이미 구매한 라이선스에 대해 "계정 설정"을 다시 누른 경우: AWS는 새 등록 토큰을 발급한다. */
+    public PurchaseResult issueToken(String licenseArn) {
+        License license = store.license(licenseArn).orElseThrow(
+                () -> MockAwsException.clientError("ResourceNotFoundException", "Unknown licenseArn."));
+        StoredToken token = new StoredToken(randomToken(), license.licenseArn,
+                clock.now().plus(properties.mockAws().registrationTokenTtl()), false);
+        store.addToken(token);
+        return new PurchaseResult(token.token, "/marketplace/fulfillment", "x-amzn-marketplace-token",
+                license.licenseArn, license.customerAWSAccountId, license.productCode, token.expiresAt, false);
+    }
+
     public EventResult publish(EventRequest request) {
         if (request == null || request.type() == null || !StringUtils.hasText(request.licenseArn())) {
             throw MockAwsException.clientError("ValidationException", "type and licenseArn are required.");

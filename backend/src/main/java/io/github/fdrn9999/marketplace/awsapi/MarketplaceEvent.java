@@ -12,7 +12,7 @@ public record MarketplaceEvent(
         String licenseArn,
         String customerAWSAccountId,
         String productCode,
-        boolean freeTrial,
+        Boolean freeTrial,
         Instant occurredAt) {
 
     public enum Type {

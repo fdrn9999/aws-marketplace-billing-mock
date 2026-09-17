@@ -45,6 +45,18 @@ public class MockSimulatorController {
         return simulator.purchase(request);
     }
 
+    public record TokenRequest(String licenseArn) {
+    }
+
+    /** 기존 라이선스로 "계정 설정"을 다시 누른 것과 같다. 새 등록 토큰을 발급한다. */
+    @PostMapping("/tokens")
+    public PurchaseResult issueToken(@RequestBody(required = false) TokenRequest request) {
+        if (request == null || request.licenseArn() == null) {
+            throw MockAwsException.clientError("ValidationException", "licenseArn is required.");
+        }
+        return simulator.issueToken(request.licenseArn());
+    }
+
     /** 구독 시작 / 계약 갱신 / 해지 이벤트를 발행한다. */
     @PostMapping("/events")
     public EventResult publish(@RequestBody(required = false) EventRequest request) {
