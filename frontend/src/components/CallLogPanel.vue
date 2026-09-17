@@ -11,13 +11,18 @@ const props = defineProps<{ licenseArn: string | null; refreshKey: number }>()
 
 const entries = ref<CallLogEntry[]>([])
 const failed = ref(false)
+let loadSeq = 0
 
 async function load() {
+  // 늦게 도착한 이전 고객의 로그가 현재 화면을 덮지 않도록 마지막 요청만 반영한다
+  const seq = ++loadSeq
   try {
-    entries.value = await simulator.calls(props.licenseArn, 15)
+    const result = await simulator.calls(props.licenseArn, 15)
+    if (seq !== loadSeq) return
+    entries.value = result
     failed.value = false
   } catch {
-    failed.value = true
+    if (seq === loadSeq) failed.value = true
   }
 }
 

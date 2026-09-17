@@ -24,11 +24,6 @@ const test = base.extend<{ consoleErrors: string[] }>({
   ],
 })
 
-/** 녹화(PW_VIDEO=1) 중에만 화면을 잠시 보여준다 */
-async function pause(page: Page, ms = 1200) {
-  if (process.env.PW_VIDEO) await page.waitForTimeout(ms)
-}
-
 async function shot(page: Page, name: string) {
   // 스크롤된 상태로 전체 페이지를 찍으면 고정 헤더가 중간에 찍히므로 맨 위로 올린 뒤 촬영한다
   await page.evaluate(() => window.scrollTo(0, 0))
@@ -41,12 +36,9 @@ test('구매 → Fulfillment → 등록 → 사용 → 시간 경과 → 미터�
   await expect(page.getByTestId('product-prod-usage-001')).toBeVisible()
   await shot(page, '01-marketplace')
 
-  await pause(page)
   await page.getByTestId('subscribe-prod-usage-001').click()
   await expect(page.getByTestId('purchase-result')).toBeVisible()
   await shot(page, '02-purchase')
-  await page.getByTestId('purchase-result').scrollIntoViewIfNeeded()
-  await pause(page, 2000)
 
   // "계정 설정": 브라우저가 등록 토큰을 Fulfillment URL로 form POST → 백엔드가 302로 등록 화면에 보냄
   await page.getByTestId('setup-account').click()
@@ -57,6 +49,10 @@ test('구매 → Fulfillment → 등록 → 사용 → 시간 경과 → 미터�
   await page.getByTestId('register-submit').click()
   await expect(page.getByTestId('error-notice')).toContainText('VALIDATION_ERROR')
   await expect(page.locator('.field-error').first()).toBeVisible()
+  // 첫 번째 오류 칸으로 포커스가 이동하고, 오류 문구가 입력과 연결된다
+  await expect(page.locator('input[name=companyName]')).toBeFocused()
+  await expect(page.locator('input[name=companyName]')).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.locator('input[name=companyName]')).toHaveAttribute('aria-describedby', 'err-companyName')
 
   await page.fill('input[name=companyName]', '데이터이즈 테스트')
   await page.fill('input[name=contactPerson]', '홍길동')
@@ -65,7 +61,6 @@ test('구매 → Fulfillment → 등록 → 사용 → 시간 경과 → 미터�
   await shot(page, '03-register')
   await page.getByTestId('register-submit').click()
   await expect(page.getByTestId('register-done')).toContainText('Active')
-  await pause(page, 1500)
 
   // 대시보드: 새 고객으로 전환되어 Active
   await page.getByTestId('go-dashboard').click()
@@ -81,18 +76,13 @@ test('구매 → Fulfillment → 등록 → 사용 → 시간 경과 → 미터�
   await expect(page.getByTestId('usage-analysis_run')).toContainText('2')
   await expect(page.getByTestId('metering-table')).toContainText('대기')
   await shot(page, '04-dashboard-usage')
-  await page.getByTestId('usage-card').scrollIntoViewIfNeeded()
-  await pause(page, 1500)
 
   // 시간 +1h → 미터링 실행 → BatchMeterUsage 성공
   await page.getByTestId('advance-1h').click()
   await expect(page.getByTestId('demo-message')).toContainText('1시간')
   await page.getByTestId('run-metering').click()
   await expect(page.getByTestId('metering-summary')).toBeVisible()
-  await pause(page, 1500)
-  await page.getByTestId('billing-card').scrollIntoViewIfNeeded()
   await expect(page.getByTestId('metering-table')).toContainText('성공')
-  await pause(page, 2000)
   await expect(page.getByTestId('metered-amount')).toContainText('$1.60') // 분석 2회×$0.50 + 6GB×$0.10
 
   // AWS 호출 로그 원문 펼치기
@@ -100,8 +90,6 @@ test('구매 → Fulfillment → 등록 → 사용 → 시간 경과 → 미터�
   await expect(firstCall).toContainText('BatchMeterUsage')
   await firstCall.locator('summary').click()
   await expect(firstCall).toContainText('MeteringRecordId')
-  await firstCall.scrollIntoViewIfNeeded()
-  await pause(page, 2500)
   await shot(page, '05-metering-billing')
 })
 
@@ -157,4 +145,32 @@ test('모바일 폭에서도 가로 스크롤 없이 표시된다', async ({ pag
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBeLessThanOrEqual(0)
   await page.screenshot({ path: `${SHOTS}/10-mobile.png` })
+})
+
+test('고객을 빠르게 바꿔도 늦게 도착한 이전 고객 응답이 화면을 덮지 않는다', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByTestId('subscription-card')).toContainText('Acme Analytics')
+  // Delta Logistics 응답만 1.5초 늦게 오도록 만든다
+  await page.route('**/api/me/**', async (route) => {
+    if (route.request().headers()['x-customer-id'] === 'sub-contract-expired') {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+    }
+    await route.continue()
+  })
+  await page.getByTestId('customer-select').selectOption('sub-contract-expired')
+  await page.getByTestId('customer-select').selectOption('sub-hybrid-overage')
+  await expect(page.getByTestId('subscription-card')).toContainText('Cobalt Retail')
+  await page.waitForTimeout(2500)
+  await expect(page.getByTestId('subscription-card')).toContainText('Cobalt Retail')
+  await expect(page.getByTestId('status-badge')).toContainText('Active')
+})
+
+test('상태가 바뀌면 이전 실행의 오류 안내가 남지 않는다', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('customer-select').selectOption('sub-contract-expired')
+  await page.getByTestId('run-analysis').click()
+  await expect(page.getByTestId('feature-panel').getByTestId('error-notice')).toBeVisible()
+  await page.getByRole('button', { name: '계약 갱신 (+365일)' }).click()
+  await expect(page.getByTestId('status-badge')).toContainText('Active')
+  await expect(page.getByTestId('feature-panel').getByTestId('error-notice')).toHaveCount(0)
 })

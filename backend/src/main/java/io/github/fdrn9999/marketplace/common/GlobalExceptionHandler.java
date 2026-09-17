@@ -56,7 +56,15 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex, HttpServletRequest request) {
-        return build(ErrorCode.VALIDATION_ERROR, "요청 형식이 올바르지 않습니다: " + rootMessage(ex), Map.of(), request);
+        // 역직렬화 내부 메시지는 응답에 넣지 않고 요청 ID와 함께 로그에만 남긴다
+        log.info("잘못된 요청 {} {} [{}]: {}", request.getMethod(), request.getRequestURI(),
+                RequestIdFilter.currentId(request), rootMessage(ex));
+        String message = ex instanceof MissingServletRequestParameterException missing
+                ? "필수 파라미터가 없습니다: " + missing.getParameterName()
+                : ex instanceof MethodArgumentTypeMismatchException mismatch
+                        ? "파라미터 형식이 올바르지 않습니다: " + mismatch.getName()
+                        : "요청 본문을 해석할 수 없습니다 (JSON 형식과 값의 타입을 확인해 주세요)";
+        return build(ErrorCode.VALIDATION_ERROR, message, Map.of(), request);
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)

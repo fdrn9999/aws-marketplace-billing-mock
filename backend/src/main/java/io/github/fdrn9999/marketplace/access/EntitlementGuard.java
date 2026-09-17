@@ -36,10 +36,15 @@ public class EntitlementGuard {
                     ErrorCode.ENTITLEMENT_UNAVAILABLE.defaultMessage() + " 잠시 후 다시 시도해 주세요.",
                     Map.of("awsErrorType", String.valueOf(context.freshness().error())), 30L);
         }
-        StatusEvaluation evaluation = context.evaluation();
+        assertActive(context.evaluation());
+        return context;
+    }
+
+    /** ACTIVE가 아니면 상태에 맞는 403을 던진다. 사용량 기록 직전(락 안) 재검사에도 쓴다. */
+    public static void assertActive(StatusEvaluation evaluation) {
         switch (evaluation.status()) {
             case ACTIVE:
-                return context;
+                return;
             case EXPIRED:
                 throw new ApiException(ErrorCode.SUBSCRIPTION_EXPIRED, ErrorCode.SUBSCRIPTION_EXPIRED.defaultMessage(),
                         Map.of("reason", evaluation.reason().name()));

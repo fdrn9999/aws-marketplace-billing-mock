@@ -145,7 +145,7 @@
 
 ## 7. Metering / Billing
 1. **대상 선정**: 시뮬레이션 시계 기준으로 `hourStart + 1h <= now`인 **마감된 버킷** 중 `PENDING` 상태인 것. 현재 시간 버킷은 보내지 않는다.
-2. **0 사용량 전송** [가이드 p15] + [Mock 정책 세부]: ACTIVE인 SUBSCRIPTION/HYBRID 구독에서 마감 시간에 레코드가 없으면, 대표 차원으로 quantity 0 레코드를 만든다. 구독별 watermark(`lastMeteredHour`) 이후 **최근 3시간까지만** 보충한다(시계를 +31일 옮겨도 폭증하지 않도록).
+2. **0 사용량 전송** [가이드 p15] + [Mock 정책 세부]: ACTIVE인 **SUBSCRIPTION(사용량 기반)** 구독에서 마감 시간에 어떤 차원의 레코드도 없으면, 대표 차원(첫 번째 차원)으로 quantity 0 레코드를 만든다. 가이드가 "사용량 없더라도 0 전송"을 사용량 기반 모델에만 적었으므로 혼합형에는 적용하지 않는다. 최근 3시간 안에서 (구독 시작 이후) 레코드가 없는 시간대를 찾아 보충한다(시계를 +31일 옮겨도 폭증하지 않도록). ※ 구현 중 v2의 "SUBSCRIPTION/HYBRID + watermark"에서 변경
 3. **만료 레코드 사전 차단** [AWS]: 24시간 이상 지난 버킷은 보내지 않고 `FAILED(TIMESTAMP_OUT_OF_BOUNDS)`로 처리한다. 요청 단위 예외 때문에 배치 전체가 실패하는 것을 막는다.
 4. **Claim**: 대상 레코드를 `SENDING`으로 바꾼 뒤 `productCode`별로 묶고, 25건씩 나눠 BatchMeterUsage를 호출한다. 앱 클라이언트는 LicenseArn 방식이므로 `ProductCode`를 생략한다 [AWS].
 5. **결과 처리**
@@ -244,6 +244,23 @@ aws-marketplace-billing-mock/
 | 등록 토큰 "통상 4시간" | **보류**: 확인 불가 → TTL은 설정값 [Mock 정책] | 근거 미확인 |
 | Marketplace + 등록 화면 통합 | **부분 수용**: fulfillment가 서버 POST→302 구조라 라우트는 분리, 화면은 최소화 | - |
 | AWS SDK 어댑터 가치 낮음 | 수용 (스텁 제거, README 설명만) | - |
+
+## 13-2. 완성본 Codex 코드 리뷰 반영 내역 (2026-09-17)
+| # | 지적 | 판정 | 조치 (재현 테스트 → 수정) |
+|---|---|---|---|
+| 1 | 권한 검사가 락 밖이라 해지 이벤트와 경합 | 수용 (P0는 과장, 좁은 경합) | 락 안에서 상태 재검사 · `UsageRaceTest` |
+| 2 | 고객을 빠르게 바꾸면 늦은 응답이 화면을 덮음 | 수용 | 요청 순번으로 마지막 응답만 반영 · E2E |
+| 3 | 순서가 뒤바뀐 이벤트가 최신 상태를 덮음 | 부분 수용 (주석이 순서를 보장한다고 쓰진 않았음) | `lastEventAt`보다 오래된 이벤트 무시 · `MarketplaceEventOrderTest` |
+| 4 | 재구독 시 계약 기간이 이어짐 | 수용 | 해지 상태에서 시작 이벤트 → 새 기간 |
+| 5 | 예상 못한 예외 시 SENDING 고착 | 수용 | finally로 되돌림, int 범위 초과는 사전 FAILED · `MeteringJobTest` |
+| 6 | 0 보충 범위가 PLAN과 다름 | 문서만 수용 (가이드 근거로 의도한 결정) | §7 수정 |
+| 7 | Mock이 요청당 제품 1개 제약을 검사 안 함 | 수용 | ValidationException · 계약 테스트 |
+| 8 | 조작된 NextToken이 500 | 수용 | InvalidParameterException · 계약 테스트 |
+| 9 | 이벤트 비밀값이 저장소에 고정 | 수용 | `APP_EVENT_SECRET`, 비데모 모드에서 기본값이면 기동 거부 · `AppPropertiesTest` |
+| 10 | 초기화 중 동시 요청이 상태를 오염 | 수용 | `DemoStateLock`(요청=읽기, 초기화=쓰기) · `DemoStateLockTest` |
+| 11 | 오류 응답에 역직렬화 내부 메시지 노출 | 수용 | 고정 문구 + 로그 |
+| 12 | 프론트 경합 테스트 없음 | 수용 | E2E 추가 |
+| 13 | 등록 폼 접근성 | 수용 | `aria-invalid`/`aria-describedby`, 첫 오류 칸 포커스 |
 
 ## 14. 결정 사항 (2026-09-17 확정)
 1. **작업 위치**: `C:\dev\aws-marketplace-billing-mock` (OneDrive 밖, 영문 경로)

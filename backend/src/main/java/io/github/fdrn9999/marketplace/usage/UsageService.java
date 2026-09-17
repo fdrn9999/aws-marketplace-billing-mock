@@ -24,6 +24,7 @@ import io.github.fdrn9999.marketplace.metering.MeteringBuckets;
 import io.github.fdrn9999.marketplace.store.IdempotencyRepository;
 import io.github.fdrn9999.marketplace.store.UsageEventRepository;
 import io.github.fdrn9999.marketplace.subscription.SubscriptionContext;
+import io.github.fdrn9999.marketplace.subscription.SubscriptionStatusCalculator;
 
 /**
  * 과제 흐름의 "③ 사용량 발생" 단계.
@@ -85,6 +86,10 @@ public class UsageService {
             }
 
             Instant now = clock.now();
+            // 락 밖의 권한 확인과 지금 사이에 해지 등 상태 변경이 있었을 수 있으므로 락 안에서 다시 확인한다
+            EntitlementGuard.assertActive(SubscriptionStatusCalculator.evaluate(subscriber, product,
+                    context.freshness().trusted(), now));
+
             Map<String, Long> requested = new LinkedHashMap<>();
             requested.put(ANALYSIS_RUN, 1L);
             if (product.dimension(DATA_GB).isPresent()) {

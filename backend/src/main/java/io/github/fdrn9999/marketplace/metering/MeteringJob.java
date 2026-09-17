@@ -124,9 +124,18 @@ public class MeteringJob {
             byProduct.computeIfAbsent(record.getProductCode(), k -> new ArrayList<>()).add(record);
         }
         int batchSize = Math.max(1, Math.min(settings.batchSize(), 25));
-        for (List<MeteringRecord> productRecords : byProduct.values()) {
-            for (int i = 0; i < productRecords.size(); i += batchSize) {
-                send(productRecords.subList(i, Math.min(productRecords.size(), i + batchSize)), tally, true);
+        try {
+            for (List<MeteringRecord> productRecords : byProduct.values()) {
+                for (int i = 0; i < productRecords.size(); i += batchSize) {
+                    send(productRecords.subList(i, Math.min(productRecords.size(), i + batchSize)), tally, true);
+                }
+            }
+        } finally {
+            // 어떤 이유로든 결과를 반영하지 못한 레코드가 SENDING에 남지 않도록 되돌린다
+            for (MeteringRecord record : claimed) {
+                if (record.getStatus() == MeteringStatus.SENDING) {
+                    retryLater(record, "미터링 작업이 중간에 중단됨", tally);
+                }
             }
         }
         RunSummary summary = new RunSummary(startedAt, tally.zero, tally.claimed, tally.batches, tally.success,
@@ -188,6 +197,12 @@ public class MeteringJob {
                     tally.failed++;
                     return;
                 }
+                if (candidate.getQuantity() < 0 || candidate.getQuantity() > Integer.MAX_VALUE) {
+                    // AWS의 Quantity는 int 범위라서 보낼 수 없다
+                    finish(candidate, MeteringStatus.FAILED, "QUANTITY_OUT_OF_RANGE: " + candidate.getQuantity(), null);
+                    tally.failed++;
+                    return;
+                }
                 candidate.setStatus(MeteringStatus.SENDING);
                 candidate.setAttempts(candidate.getAttempts() + 1);
                 candidate.setUpdatedAt(now);
@@ -209,22 +224,17 @@ public class MeteringJob {
         BatchMeterUsageResult result;
         try {
             result = client.batchMeterUsage(payload);
-        } catch (MarketplaceApiException e) {
-            tally.errors.add(e.awsErrorType() + " (" + batch.size() + "건)");
-            if (!e.isRetryable() && isolateOnRequestError && batch.size() > 1) {
-                for (MeteringRecord record : batch) {
-                    send(List.of(record), tally, false);
-                }
+        } catch (RuntimeException unexpected) {
+            if (unexpected instanceof MarketplaceApiException e) {
+                handleCallFailure(batch, e, tally, isolateOnRequestError);
                 return;
             }
+            // 응답을 받지 못했으므로 결과를 알 수 없다: 다음 실행에서 다시 보낸다 (재전송은 멱등)
+            String reason = unexpected.getClass().getSimpleName() + ": " + unexpected.getMessage();
+            log.warn("BatchMeterUsage 호출 중 예상하지 못한 오류", unexpected);
+            tally.errors.add(unexpected.getClass().getSimpleName() + " (" + batch.size() + "건)");
             for (MeteringRecord record : batch) {
-                if (e.isRetryable()) {
-                    retryLater(record, e.awsErrorType(), tally);
-                } else {
-                    locks.withLock(record.getLicenseArn(), () ->
-                            finish(record, MeteringStatus.FAILED, e.awsErrorType(), clock.now()));
-                    tally.failed++;
-                }
+                retryLater(record, reason, tally);
             }
             return;
         }
@@ -249,6 +259,26 @@ public class MeteringJob {
         // 응답에 없는 레코드는 결과를 알 수 없으므로 다시 보낸다 (재전송은 멱등)
         for (MeteringRecord missing : byKey.values()) {
             retryLater(missing, "응답에 결과가 없음", tally);
+        }
+    }
+
+    private void handleCallFailure(List<MeteringRecord> batch, MarketplaceApiException e, Tally tally,
+            boolean isolateOnRequestError) {
+        tally.errors.add(e.awsErrorType() + " (" + batch.size() + "건)");
+        if (!e.isRetryable() && isolateOnRequestError && batch.size() > 1) {
+            for (MeteringRecord record : batch) {
+                send(List.of(record), tally, false);
+            }
+            return;
+        }
+        for (MeteringRecord record : batch) {
+            if (e.isRetryable()) {
+                retryLater(record, e.awsErrorType(), tally);
+            } else {
+                locks.withLock(record.getLicenseArn(), () ->
+                        finish(record, MeteringStatus.FAILED, e.awsErrorType(), clock.now()));
+                tally.failed++;
+            }
         }
     }
 

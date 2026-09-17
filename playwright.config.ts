@@ -3,8 +3,8 @@ import { defineConfig } from '@playwright/test'
 // 기본은 PC에 설치된 Chrome을 사용한다 (브라우저 추가 다운로드 불필요).
 // Playwright 번들 Chromium을 쓰려면: npx playwright install chromium 후 PW_CHANNEL=bundled
 const channel = process.env.PW_CHANNEL === 'bundled' ? undefined : (process.env.PW_CHANNEL ?? 'chrome')
-// PW_VIDEO=1이면 실행 영상을 test-results/에 녹화한다
-const video = process.env.PW_VIDEO ? { mode: 'on' as const, size: { width: 1280, height: 860 } } : 'off'
+// 데모 영상 녹화(npm run demo:video)일 때만 PW_VIDEO=1로 녹화한다
+const video = process.env.PW_VIDEO ? { mode: 'on' as const, size: { width: 1280, height: 800 } } : 'off'
 
 export default defineConfig({
   testDir: './e2e',
@@ -20,9 +20,10 @@ export default defineConfig({
     locale: 'ko-KR',
     timezoneId: 'Asia/Seoul',
     trace: 'retain-on-failure',
+    // 멈춘 동작이 테스트 전체 제한 시간까지 기다리지 않고 바로 드러나도록 동작별 제한 시간을 둔다
+    actionTimeout: 15_000,
+    navigationTimeout: 20_000,
     video,
-    // 녹화할 때는 사람이 따라볼 수 있게 동작 사이에 간격을 둔다
-    launchOptions: { slowMo: process.env.PW_VIDEO ? 250 : 0 },
   },
   // 서버가 떠 있지 않으면 루트의 npm run dev로 백엔드(8080)와 프론트엔드(5173)를 함께 띄운다
   webServer: {

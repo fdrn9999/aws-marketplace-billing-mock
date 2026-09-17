@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, shallowRef } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, shallowRef } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { ApiError } from '../api/client'
@@ -37,6 +37,8 @@ const submitting = ref(false)
 const result = shallowRef<RegisterResponse | null>(null)
 const fieldErrors = ref<Record<string, string>>({})
 
+const FIELD_ORDER = ['companyName', 'contactPerson', 'contactPhone', 'contactEmail'] as const
+
 const form = reactive({
   companyName: '',
   contactPerson: '',
@@ -64,6 +66,10 @@ async function submit() {
   } catch (e) {
     if (e instanceof ApiError && e.code === 'VALIDATION_ERROR') {
       fieldErrors.value = (e.details.fields as Record<string, string>) ?? {}
+      // 첫 번째 오류 입력으로 포커스를 옮겨 키보드/스크린리더 사용자도 바로 알 수 있게 한다
+      await nextTick()
+      const first = FIELD_ORDER.find((name) => fieldErrors.value[name])
+      if (first) document.querySelector<HTMLInputElement>(`input[name=${first}]`)?.focus()
     }
     submitError.value = e
   } finally {
@@ -141,23 +147,53 @@ onMounted(load)
         <form class="form" novalidate @submit.prevent="submit">
           <label class="field">
             회사명
-            <input v-model="form.companyName" name="companyName" autocomplete="organization" required />
-            <span v-if="fieldErrors.companyName" class="field-error">{{ fieldErrors.companyName }}</span>
+            <input
+              v-model="form.companyName"
+              name="companyName"
+              autocomplete="organization"
+              required
+              :aria-invalid="Boolean(fieldErrors.companyName)"
+              :aria-describedby="fieldErrors.companyName ? 'err-companyName' : undefined"
+            />
+            <span v-if="fieldErrors.companyName" id="err-companyName" class="field-error">{{ fieldErrors.companyName }}</span>
           </label>
           <label class="field">
             담당자 이름
-            <input v-model="form.contactPerson" name="contactPerson" autocomplete="name" required />
-            <span v-if="fieldErrors.contactPerson" class="field-error">{{ fieldErrors.contactPerson }}</span>
+            <input
+              v-model="form.contactPerson"
+              name="contactPerson"
+              autocomplete="name"
+              required
+              :aria-invalid="Boolean(fieldErrors.contactPerson)"
+              :aria-describedby="fieldErrors.contactPerson ? 'err-contactPerson' : undefined"
+            />
+            <span v-if="fieldErrors.contactPerson" id="err-contactPerson" class="field-error">{{ fieldErrors.contactPerson }}</span>
           </label>
           <label class="field">
             연락처
-            <input v-model="form.contactPhone" name="contactPhone" autocomplete="tel" placeholder="010-1234-5678" required />
-            <span v-if="fieldErrors.contactPhone" class="field-error">{{ fieldErrors.contactPhone }}</span>
+            <input
+              v-model="form.contactPhone"
+              name="contactPhone"
+              autocomplete="tel"
+              placeholder="010-1234-5678"
+              required
+              :aria-invalid="Boolean(fieldErrors.contactPhone)"
+              :aria-describedby="fieldErrors.contactPhone ? 'err-contactPhone' : undefined"
+            />
+            <span v-if="fieldErrors.contactPhone" id="err-contactPhone" class="field-error">{{ fieldErrors.contactPhone }}</span>
           </label>
           <label class="field">
             이메일
-            <input v-model="form.contactEmail" name="contactEmail" type="email" autocomplete="email" required />
-            <span v-if="fieldErrors.contactEmail" class="field-error">{{ fieldErrors.contactEmail }}</span>
+            <input
+              v-model="form.contactEmail"
+              name="contactEmail"
+              type="email"
+              autocomplete="email"
+              required
+              :aria-invalid="Boolean(fieldErrors.contactEmail)"
+              :aria-describedby="fieldErrors.contactEmail ? 'err-contactEmail' : undefined"
+            />
+            <span v-if="fieldErrors.contactEmail" id="err-contactEmail" class="field-error">{{ fieldErrors.contactEmail }}</span>
           </label>
           <div class="button-row">
             <button type="submit" class="primary" :disabled="submitting" data-testid="register-submit">

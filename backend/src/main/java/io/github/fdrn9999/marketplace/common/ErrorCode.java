@@ -21,6 +21,7 @@ public enum ErrorCode {
 
     METERING_ALREADY_RUNNING(HttpStatus.CONFLICT, "미터링 작업이 이미 실행 중입니다"),
     IDEMPOTENCY_KEY_CONFLICT(HttpStatus.CONFLICT, "같은 Idempotency-Key가 다른 요청에 이미 사용되었습니다"),
+    DEMO_BUSY(HttpStatus.CONFLICT, "진행 중인 요청이 있어 데이터를 초기화하지 못했습니다. 잠시 후 다시 시도해 주세요"),
 
     MARKETPLACE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AWS Marketplace API를 일시적으로 사용할 수 없습니다"),
     ENTITLEMENT_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "계약(Entitlement) 정보를 확인할 수 없습니다"),

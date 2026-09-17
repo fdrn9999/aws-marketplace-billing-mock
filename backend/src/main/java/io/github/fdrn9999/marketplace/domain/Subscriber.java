@@ -33,6 +33,8 @@ public class Subscriber {
     private List<EntitlementSnapshot> entitlements = List.of();
     private Instant termStartAt;
     private Instant lastEntitlementSyncAt;
+    /** 마지막으로 반영한 Marketplace 이벤트의 발생 시각 (순서가 뒤바뀐 이벤트를 걸러내는 기준) */
+    private Instant lastEventAt;
 
     private Instant createdAt;
     private Instant updatedAt;
@@ -171,6 +173,14 @@ public class Subscriber {
 
     public void setLastEntitlementSyncAt(Instant lastEntitlementSyncAt) {
         this.lastEntitlementSyncAt = lastEntitlementSyncAt;
+    }
+
+    public Instant getLastEventAt() {
+        return lastEventAt;
+    }
+
+    public void setLastEventAt(Instant lastEventAt) {
+        this.lastEventAt = lastEventAt;
     }
 
     public Instant getCreatedAt() {

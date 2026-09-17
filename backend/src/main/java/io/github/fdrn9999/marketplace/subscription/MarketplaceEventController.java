@@ -3,6 +3,8 @@ package io.github.fdrn9999.marketplace.subscription;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -25,6 +27,8 @@ import tools.jackson.databind.json.JsonMapper;
 @RestController
 @RequestMapping("/api/internal/marketplace-events")
 public class MarketplaceEventController {
+
+    private static final Logger log = LoggerFactory.getLogger(MarketplaceEventController.class);
 
     private final MarketplaceEventHandler handler;
     private final AppProperties properties;
@@ -49,7 +53,8 @@ public class MarketplaceEventController {
         try {
             event = body == null ? null : jsonMapper.readValue(body, MarketplaceEvent.class);
         } catch (JacksonException e) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, "이벤트 본문을 해석할 수 없습니다: " + e.getOriginalMessage());
+            log.info("이벤트 본문 해석 실패: {}", e.getOriginalMessage());
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, "이벤트 본문을 해석할 수 없습니다");
         }
         return handler.handle(event);
     }

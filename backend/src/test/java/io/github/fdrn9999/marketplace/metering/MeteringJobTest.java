@@ -271,6 +271,39 @@ class MeteringJobTest {
     }
 
     @Test
+    @DisplayName("AWS 오류가 아닌 예외가 나도 전송 대상 레코드가 SENDING에 고착되지 않는다")
+    void unexpectedFailureReleasesClaims() {
+        MeteringRecord a = pending("analysis_run", CURRENT_HOUR.minus(1, ChronoUnit.HOURS), 1);
+        MeteringRecord b = pending("data_gb", CURRENT_HOUR.minus(1, ChronoUnit.HOURS), 2);
+        client.responder = recs -> {
+            throw new IllegalStateException("연결이 끊겼습니다");
+        };
+
+        MeteringJob.RunSummary summary = job.run();
+
+        assertThat(List.of(a.getStatus(), b.getStatus())).containsOnly(MeteringStatus.PENDING);
+        assertThat(a.getLastError()).contains("IllegalStateException");
+        assertThat(summary.retryLater()).isEqualTo(2);
+
+        client.responder = FakeClient::allSuccess;
+        assertThat(job.run().success()).as("다음 실행에서 정상 전송").isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("AWS 수량 범위(int)를 넘는 레코드는 보내지 않고 FAILED, 나머지는 정상 전송")
+    void rejectsQuantityOverflow() {
+        MeteringRecord huge = pending("data_gb", CURRENT_HOUR.minus(1, ChronoUnit.HOURS), Integer.MAX_VALUE + 1L);
+        MeteringRecord normal = pending("analysis_run", CURRENT_HOUR.minus(1, ChronoUnit.HOURS), 3);
+
+        job.run();
+
+        assertThat(huge.getStatus()).isEqualTo(MeteringStatus.FAILED);
+        assertThat(huge.getLastError()).startsWith("QUANTITY_OUT_OF_RANGE");
+        assertThat(normal.getStatus()).isEqualTo(MeteringStatus.SUCCESS);
+        assertThat(client.calls).hasSize(1).first().satisfies(batch -> assertThat(batch).hasSize(1));
+    }
+
+    @Test
     @DisplayName("실행 중에 다시 실행하면 409 METERING_ALREADY_RUNNING")
     void preventsConcurrentRuns() throws Exception {
         pending("analysis_run", CURRENT_HOUR.minus(1, ChronoUnit.HOURS), 1);

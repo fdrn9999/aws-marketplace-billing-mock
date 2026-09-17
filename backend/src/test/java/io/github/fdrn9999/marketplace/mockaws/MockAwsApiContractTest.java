@@ -147,6 +147,17 @@ class MockAwsApiContractTest extends HttpTestSupport {
         }
 
         @Test
+        @DisplayName("조작된 NextToken(음수 offset)은 500이 아니라 InvalidParameterException")
+        void rejectsTamperedNextToken() {
+            String negative = java.util.Base64.getUrlEncoder()
+                    .encodeToString("offset:-1".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            Response res = post("/mock-aws/entitlement/get-entitlements",
+                    Map.of("ProductCode", "prod-contract-001", "NextToken", negative));
+            assertThat(res.status()).isEqualTo(400);
+            assertThat(res.text("/__type")).isEqualTo("InvalidParameterException");
+        }
+
+        @Test
         @DisplayName("ProductCode 누락, 알 수 없는 필터 키, 잘못된 MaxResults는 InvalidParameterException")
         void rejectsInvalidParameters() {
             assertThat(post("/mock-aws/entitlement/get-entitlements", Map.of()).text("/__type"))
@@ -253,6 +264,17 @@ class MockAwsApiContractTest extends HttpTestSupport {
             assertThat(post("/mock-aws/metering/batch-meter-usage", Map.of("UsageRecords",
                     List.of(record("arn:aws:license-manager::1:license:l-x", "111111111111", "analysis_run", 1, lastHour()))))
                     .text("/__type")).isEqualTo("InvalidLicenseException");
+        }
+
+        @Test
+        @DisplayName("요청 하나에는 한 제품의 레코드만 담을 수 있다 (AWS: 요청당 제품 1개)")
+        void rejectsMixedProducts() {
+            String hybrid = "arn:aws:license-manager::333333333333:license:l-hybrid-overage";
+            Response res = post("/mock-aws/metering/batch-meter-usage", Map.of("UsageRecords", List.of(
+                    record(USAGE_ACTIVE, "111111111111", "analysis_run", 1, lastHour()),
+                    record(hybrid, "333333333333", "analysis_run", 1, lastHour()))));
+            assertThat(res.status()).isEqualTo(400);
+            assertThat(res.text("/__type")).isEqualTo("ValidationException");
         }
 
         @Test

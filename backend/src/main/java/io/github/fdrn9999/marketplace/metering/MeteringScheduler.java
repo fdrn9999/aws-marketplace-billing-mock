@@ -11,6 +11,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
 import io.github.fdrn9999.marketplace.common.ApiException;
+import io.github.fdrn9999.marketplace.common.DemoStateLock;
 import io.github.fdrn9999.marketplace.config.AppProperties;
 
 /**
@@ -23,11 +24,13 @@ public class MeteringScheduler implements SmartLifecycle {
     private static final Logger log = LoggerFactory.getLogger(MeteringScheduler.class);
 
     private final MeteringJob job;
+    private final DemoStateLock stateLock;
     private final Duration interval;
     private ScheduledExecutorService executor;
 
-    public MeteringScheduler(MeteringJob job, AppProperties properties) {
+    public MeteringScheduler(MeteringJob job, DemoStateLock stateLock, AppProperties properties) {
         this.job = job;
+        this.stateLock = stateLock;
         this.interval = properties.metering().autoRunInterval();
     }
 
@@ -47,7 +50,8 @@ public class MeteringScheduler implements SmartLifecycle {
 
     private void runSafely() {
         try {
-            job.run();
+            // 요청 밖에서 실행되므로 데모 초기화와의 경계(읽기 잠금)를 직접 잡는다
+            stateLock.read(job::run);
         } catch (ApiException e) {
             log.debug("자동 미터링 건너뜀: {}", e.getMessage());
         } catch (RuntimeException e) {

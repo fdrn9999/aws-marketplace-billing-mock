@@ -19,13 +19,18 @@ const call = useAsync((gb: number, key: string) => api.runAnalysis(gb, key))
 const hasDataDimension = computed(() => props.subscription.product?.dimensions.some((d) => d.key === 'data_gb') ?? false)
 const result = computed<RunResult | null>(() => call.data.value)
 
-// 고객이 바뀌면 이전 결과를 지운다
+// 고객이 바뀌면 이전 결과를, 구독 상태가 바뀌면 이전 오류 안내를 지운다
 watch(
   () => props.subscription.customerId,
   () => {
-    call.data.value = null
-    call.error.value = null
+    call.reset()
     lastKey.value = null
+  },
+)
+watch(
+  () => props.subscription.status,
+  () => {
+    call.error.value = null
   },
 )
 

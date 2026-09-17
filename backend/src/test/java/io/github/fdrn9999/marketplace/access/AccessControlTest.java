@@ -181,6 +181,9 @@ class AccessControlTest extends HttpTestSupport {
         Response malformed = post("/api/features/analysis/run", "{not json", customer("sub-usage-active"));
         assertThat(malformed.status()).isEqualTo(400);
         assertThat(malformed.text("/error/code")).isEqualTo("VALIDATION_ERROR");
+        assertThat(malformed.text("/error/message"))
+                .as("역직렬화 내부 메시지를 노출하지 않는다")
+                .isEqualTo("요청 본문을 해석할 수 없습니다 (JSON 형식과 값의 타입을 확인해 주세요)");
 
         assertThat(get("/api/nope").status()).isEqualTo(404);
     }

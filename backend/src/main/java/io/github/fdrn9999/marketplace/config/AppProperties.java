@@ -18,6 +18,17 @@ public record AppProperties(
         @DefaultValue Entitlement entitlement,
         @DefaultValue Metering metering) {
 
+    /** 로컬 데모용 이벤트 비밀값 (저장소에 공개되어 있으므로 데모 모드에서만 허용) */
+    public static final String DEFAULT_EVENT_SECRET = "local-dev-event-secret";
+
+    public AppProperties {
+        boolean unsafeSecret = eventSecret == null || eventSecret.isBlank() || DEFAULT_EVENT_SECRET.equals(eventSecret);
+        if (!demoMode && unsafeSecret) {
+            throw new IllegalStateException(
+                    "데모 모드가 아니면 이벤트 비밀값을 환경변수 APP_EVENT_SECRET으로 지정해야 합니다 (기본값 사용 불가)");
+        }
+    }
+
     public record MockAws(
             /* Mock AWS API 주소. 비어 있으면 이 서버 자신(http://localhost:{port}) */
             @DefaultValue("") String baseUrl,

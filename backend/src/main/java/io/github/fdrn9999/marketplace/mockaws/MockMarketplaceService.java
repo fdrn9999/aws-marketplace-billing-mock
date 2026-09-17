@@ -176,12 +176,20 @@ public class MockMarketplaceService {
         if (!StringUtils.hasText(token)) {
             return 0;
         }
+        int offset;
         try {
             String decoded = new String(Base64.getUrlDecoder().decode(token), StandardCharsets.UTF_8);
-            return Integer.parseInt(decoded.substring("offset:".length()));
+            if (!decoded.startsWith("offset:")) {
+                throw new IllegalArgumentException("unexpected token format");
+            }
+            offset = Integer.parseInt(decoded.substring("offset:".length()));
         } catch (RuntimeException e) {
             throw MockAwsException.clientError("InvalidParameterException", "Invalid NextToken.");
         }
+        if (offset < 0) {
+            throw MockAwsException.clientError("InvalidParameterException", "Invalid NextToken.");
+        }
+        return offset;
     }
 
     // ------------------------------------------------------------------ BatchMeterUsage
@@ -212,6 +220,11 @@ public class MockMarketplaceService {
         List<License> licenses = new ArrayList<>(records.size());
         for (UsageRecord record : records) {
             licenses.add(validateRecord(request.productCode(), record, now));
+        }
+        if (licenses.stream().map(l -> l.productCode).distinct().count() > 1) {
+            // [AWS] BatchMeterUsage 요청 하나는 제품 하나만 대상으로 한다 ([Mock 정책] 예외 이름은 단순화)
+            throw MockAwsException.clientError("ValidationException",
+                    "Each BatchMeterUsage request must contain usage records for a single product.");
         }
         if (StringUtils.hasText(request.productCode()) && records.stream().anyMatch(r -> r.licenseArn() != null)) {
             log.info("[Mock AWS] ProductCode와 LicenseArn이 함께 전송됨: 신규 연동에서는 ProductCode를 생략해야 합니다");

@@ -39,12 +39,17 @@ async function loadCustomers() {
   }
 }
 
+/** 마지막으로 시작한 조회 번호. 고객을 빠르게 바꿨을 때 늦게 도착한 이전 응답은 버린다 */
+let loadSeq = 0
+
 /** ①~⑤ 흐름에 필요한 데이터를 한 번에 다시 읽는다 */
 async function loadAll() {
+  const seq = ++loadSeq
   loading.value = true
   loadError.value = null
   partialError.value = null
   const [s, u, b] = await Promise.allSettled([api.subscription(), api.usage(), api.billing()])
+  if (seq !== loadSeq) return
   if (s.status === 'fulfilled') {
     subscription.value = s.value
   } else {
@@ -66,8 +71,11 @@ async function onChanged() {
 
 async function refreshEntitlements() {
   refreshing.value = true
+  const forCustomer = session.customerId
   try {
-    subscription.value = await api.refreshSubscription()
+    const refreshed = await api.refreshSubscription()
+    if (forCustomer !== session.customerId) return
+    subscription.value = refreshed
     await onChanged()
   } catch (e) {
     partialError.value = e
