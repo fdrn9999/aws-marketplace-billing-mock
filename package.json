@@ -9,7 +9,8 @@
     "dev:web": "npm --prefix frontend run dev",
     "test": "node scripts/gradlew.mjs test",
     "build": "node scripts/gradlew.mjs build && npm --prefix frontend run build",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "demo:video": "node scripts/record-demo.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
