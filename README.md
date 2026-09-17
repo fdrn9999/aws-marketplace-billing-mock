@@ -47,7 +47,7 @@ npm run dev        # 백엔드(:8080) + 프론트엔드(:5173) 동시 실행
 | 명령 | 내용 |
 |---|---|
 | `npm test` | 백엔드 테스트 (JUnit 5, 실제 포트로 서버를 띄워 HTTP로 검증) |
-| `npm run e2e` | Playwright 브라우저 테스트 (서버가 꺼져 있으면 자동 기동) + 스크린샷 갱신 |
+| `npm run e2e` | Playwright 브라우저 테스트 + 스크린샷 갱신. **다른 터미널에서 `npm run dev`를 먼저 띄워 두는 것을 권장**합니다(떠 있는 서버를 그대로 사용). 서버가 없으면 백엔드 jar와 Vite를 각각 자동으로 띄웁니다 |
 | `npm run build` | 백엔드 jar + 프론트엔드 정적 빌드 |
 | `npm run demo:video` | 데모 영상 다시 녹화 → `docs/demo.webm` (커서·자막 표시) |
 | `npm run dev:api` / `npm run dev:web` | 백엔드 / 프론트엔드만 따로 실행 |
@@ -346,6 +346,7 @@ sequenceDiagram
 aws-marketplace-billing-mock/
 ├─ package.json                 # setup / dev / test / e2e / build
 ├─ scripts/gradlew.mjs          # OS별 Gradle wrapper 실행
+├─ scripts/start-backend.mjs    # E2E용 백엔드 실행 (bootJar → java -jar)
 ├─ scripts/record-demo.mjs      # 데모 영상 녹화 → docs/demo.webm
 ├─ backend/src/main/java/io/github/fdrn9999/marketplace/
 │  ├─ awsapi/       AWS 요청·응답 형식 (Mock 서버와 클라이언트가 공유하는 계약)

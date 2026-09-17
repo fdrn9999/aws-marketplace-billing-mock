@@ -25,11 +25,22 @@ export default defineConfig({
     navigationTimeout: 20_000,
     video,
   },
-  // 서버가 떠 있지 않으면 루트의 npm run dev로 백엔드(8080)와 프론트엔드(5173)를 함께 띄운다
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173/api/health',
-    reuseExistingServer: true,
-    timeout: 180_000,
-  },
+  // 서버가 떠 있지 않으면 백엔드(8080)와 프론트엔드(5173)를 각각 띄운다.
+  // 백엔드는 gradlew bootRun 대신 빌드한 jar를 직접 실행한다 (scripts/start-backend.mjs 주석 참고).
+  webServer: [
+    {
+      command: 'node scripts/start-backend.mjs',
+      url: 'http://localhost:8080/api/health',
+      reuseExistingServer: true,
+      timeout: 240_000,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+    {
+      command: 'npm --prefix frontend run dev',
+      url: 'http://localhost:5173/',
+      reuseExistingServer: true,
+      timeout: 60_000,
+    },
+  ],
 })
