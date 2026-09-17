@@ -9,10 +9,10 @@
     "dev:web": "npm --prefix frontend run dev",
     "test": "node scripts/gradlew.mjs test",
     "build": "node scripts/gradlew.mjs build && npm --prefix frontend run build",
-    "e2e": "playwright test",
-    "screenshots": "playwright test --grep @screenshots"
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "concurrently": "^9.2.1"
   },
   "engines": {
