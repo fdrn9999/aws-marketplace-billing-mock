@@ -1,0 +1,18 @@
+[
+  { "subscriberId": "sub-usage-active", "dimension": "analysis_run", "quantity": 4, "includedQuantity": 0, "meteredQuantity": 4, "occurredAt": "now-3h", "meteringStatus": "SUCCESS" },
+  { "subscriberId": "sub-usage-active", "dimension": "data_gb", "quantity": 12, "includedQuantity": 0, "meteredQuantity": 12, "occurredAt": "now-3h", "meteringStatus": "SUCCESS" },
+  { "subscriberId": "sub-usage-active", "dimension": "analysis_run", "quantity": 2, "includedQuantity": 0, "meteredQuantity": 2, "occurredAt": "now-1h", "meteringStatus": "PENDING" },
+  { "subscriberId": "sub-usage-active", "dimension": "data_gb", "quantity": 3, "includedQuantity": 0, "meteredQuantity": 3, "occurredAt": "now-1h", "meteringStatus": "PENDING" },
+  { "subscriberId": "sub-usage-active", "dimension": "analysis_run", "quantity": 1, "includedQuantity": 0, "meteredQuantity": 1, "occurredAt": "now", "meteringStatus": "PENDING" },
+
+  { "subscriberId": "sub-contract-active", "dimension": "analysis_run", "quantity": 95, "includedQuantity": 95, "meteredQuantity": 0, "occurredAt": "now-10d" },
+
+  { "subscriberId": "sub-hybrid-overage", "dimension": "analysis_run", "quantity": 50, "includedQuantity": 50, "meteredQuantity": 0, "occurredAt": "now-10d" },
+  { "subscriberId": "sub-hybrid-overage", "dimension": "analysis_run", "quantity": 5, "includedQuantity": 0, "meteredQuantity": 5, "occurredAt": "now-3h", "meteringStatus": "SUCCESS" },
+  { "subscriberId": "sub-hybrid-overage", "dimension": "analysis_run", "quantity": 2, "includedQuantity": 0, "meteredQuantity": 2, "occurredAt": "now-2h", "meteringStatus": "PENDING" },
+  { "subscriberId": "sub-hybrid-overage", "dimension": "analysis_run", "quantity": 1, "includedQuantity": 0, "meteredQuantity": 1, "occurredAt": "now", "meteringStatus": "PENDING" },
+
+  { "subscriberId": "sub-contract-expired", "dimension": "analysis_run", "quantity": 100, "includedQuantity": 100, "meteredQuantity": 0, "occurredAt": "now-40d" },
+
+  { "subscriberId": "sub-unsubscribed", "dimension": "analysis_run", "quantity": 7, "includedQuantity": 0, "meteredQuantity": 7, "occurredAt": "now-30d", "meteringStatus": "SUCCESS" }
+]

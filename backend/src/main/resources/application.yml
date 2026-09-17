@@ -6,25 +6,30 @@ server:
   port: 8080
 
 app:
-  # Enables demo-only endpoints (/api/admin/**, /mock-aws/_sim/**). Disable outside local demos.
+  # 데모 전용 API(/api/admin/**, /mock-aws/_sim/**) 활성화. 로컬 시연 외에는 끈다.
   demo-mode: true
-  # Where the Fulfillment URL redirects the buyer. Empty = relative redirect (same origin as the request).
+  # Fulfillment URL이 구매자를 보낼 프론트엔드 주소. 비어 있으면 요청과 같은 origin으로 상대 리디렉션.
   web-base-url: ""
   mock-aws:
-    # Base URL of the mock AWS Marketplace APIs. Empty = this server (http://localhost:${server.port}).
+    # Mock AWS Marketplace API 주소. 비어 있으면 이 서버 자신(http://localhost:${server.port}).
     base-url: ""
+    # [Mock 정책] 구매 시뮬레이터가 발급하는 등록 토큰 유효 시간
     registration-token-ttl: 1h
   entitlement:
-    # Re-sync entitlements from GetEntitlements when the cached copy is older than this.
+    # 캐시된 Entitlement가 이보다 오래되면 GetEntitlements로 재동기화
     refresh-after: 15m
-    # When GetEntitlements is unavailable, a cached copy is trusted for at most this long (fail-closed after).
+    # GetEntitlements 장애 시 캐시를 신뢰하는 최대 기간 (넘으면 거부 = fail-closed)
     max-staleness: 24h
   metering:
+    # BatchMeterUsage 요청당 최대 레코드 수 (AWS 제한)
     batch-size: 25
+    # [Mock 정책] UnprocessedRecords 재시도 한도
     max-attempts: 5
+    # Throttling/5xx 발생 시 호출 단위 재시도 횟수
     call-retries: 3
+    # [Mock 정책] 사용량 0 레코드를 보충할 최대 과거 시간 수
     zero-usage-backfill-hours: 3
-    # AWS rejects usage records 24 hours or more after the event.
+    # AWS는 이벤트 발생 후 24시간 이상 지난 사용량 레코드를 거부한다
     max-record-age: 24h
-    # Periodic run interval. 0 = disabled (run from the dashboard / admin API).
+    # 자동 실행 주기. 0s면 비활성 (대시보드/관리 API로 수동 실행)
     auto-run-interval: 0s

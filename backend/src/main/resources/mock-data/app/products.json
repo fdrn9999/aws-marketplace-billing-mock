@@ -1,0 +1,33 @@
+[
+  {
+    "productCode": "prod-usage-001",
+    "name": "Dataize Insight (사용량 기반)",
+    "description": "분석 1회당 과금되는 pay-as-you-go 요금제",
+    "pricingModel": "SUBSCRIPTION",
+    "contractPriceUsd": null,
+    "dimensions": [
+      { "key": "analysis_run", "name": "AI 분석 실행", "unit": "회", "meteringUnitPriceUsd": 0.50 },
+      { "key": "data_gb", "name": "처리 데이터량", "unit": "GB", "meteringUnitPriceUsd": 0.10 }
+    ]
+  },
+  {
+    "productCode": "prod-contract-001",
+    "name": "Dataize Insight (계약 기반)",
+    "description": "연간 계약으로 분석 실행 횟수를 미리 구매하는 요금제",
+    "pricingModel": "CONTRACT",
+    "contractPriceUsd": 1200.00,
+    "dimensions": [
+      { "key": "analysis_run", "name": "AI 분석 실행 (계약 수량)", "unit": "회", "meteringUnitPriceUsd": null }
+    ]
+  },
+  {
+    "productCode": "prod-hybrid-001",
+    "name": "Dataize Insight (혼합형)",
+    "description": "계약 수량을 기본 제공하고 초과분은 사용량으로 과금하는 요금제",
+    "pricingModel": "CONTRACT_WITH_SUBSCRIPTION",
+    "contractPriceUsd": 500.00,
+    "dimensions": [
+      { "key": "analysis_run", "name": "AI 분석 실행 (기본 포함 + 초과)", "unit": "회", "meteringUnitPriceUsd": 0.40 }
+    ]
+  }
+]

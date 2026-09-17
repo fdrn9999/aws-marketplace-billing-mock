@@ -12,7 +12,7 @@ export default defineConfig({
     proxy: {
       '/api': backend,
       '/mock-aws': backend,
-      // AWS Marketplace posts the registration token here (form POST), the backend answers with a 302.
+      // AWS Marketplace가 등록 토큰을 form POST로 보내는 경로. 백엔드가 302로 응답한다.
       '/marketplace/fulfillment': backend,
     },
   },

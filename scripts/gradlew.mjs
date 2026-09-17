@@ -1,4 +1,4 @@
-// Cross-platform wrapper: runs the backend Gradle wrapper (gradlew / gradlew.bat) with the given args.
+// OS에 맞는 Gradle wrapper(gradlew / gradlew.bat)를 backend 폴더에서 실행하는 래퍼
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -10,7 +10,7 @@ const command = isWindows ? 'gradlew.bat' : './gradlew'
 const child = spawn(command, process.argv.slice(2), {
   cwd: backendDir,
   stdio: 'inherit',
-  // .bat files can only be spawned through a shell on Windows
+  // Windows에서 .bat 파일은 셸을 거쳐야만 실행할 수 있다
   shell: isWindows,
 })
 
