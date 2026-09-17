@@ -1,0 +1,4 @@
+[
+  { "token": "demo-expired-token", "licenseArn": "arn:aws:license-manager::777777777777:license:l-token-demo", "expiresAt": "now-1h", "redeemed": false },
+  { "token": "demo-used-token", "licenseArn": "arn:aws:license-manager::777777777777:license:l-token-demo", "expiresAt": "now+1h", "redeemed": true }
+]

@@ -1,0 +1,9 @@
+[
+  { "licenseArn": "arn:aws:license-manager::111111111111:license:l-usage-active", "customerAWSAccountId": "111111111111", "customerIdentifier": "cust-acme", "productCode": "prod-usage-001", "state": "ACTIVE", "freeTrial": false },
+  { "licenseArn": "arn:aws:license-manager::222222222222:license:l-contract-active", "customerAWSAccountId": "222222222222", "customerIdentifier": "cust-blueharbor", "productCode": "prod-contract-001", "state": "ACTIVE", "freeTrial": false },
+  { "licenseArn": "arn:aws:license-manager::333333333333:license:l-hybrid-overage", "customerAWSAccountId": "333333333333", "customerIdentifier": "cust-cobalt", "productCode": "prod-hybrid-001", "state": "ACTIVE", "freeTrial": false },
+  { "licenseArn": "arn:aws:license-manager::444444444444:license:l-contract-expired", "customerAWSAccountId": "444444444444", "customerIdentifier": "cust-delta", "productCode": "prod-contract-001", "state": "ACTIVE", "freeTrial": false },
+  { "licenseArn": "arn:aws:license-manager::555555555555:license:l-unsubscribed", "customerAWSAccountId": "555555555555", "customerIdentifier": "cust-foxtrot", "productCode": "prod-usage-001", "state": "CANCELLED", "freeTrial": false },
+  { "licenseArn": "arn:aws:license-manager::666666666666:license:l-pending", "customerAWSAccountId": "666666666666", "customerIdentifier": "cust-echo", "productCode": "prod-usage-001", "state": "ACTIVE", "freeTrial": true },
+  { "licenseArn": "arn:aws:license-manager::777777777777:license:l-token-demo", "customerAWSAccountId": "777777777777", "customerIdentifier": "cust-golf", "productCode": "prod-usage-001", "state": "ACTIVE", "freeTrial": false }
+]

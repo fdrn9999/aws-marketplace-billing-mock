@@ -12,6 +12,8 @@ public record AppProperties(
         @DefaultValue("true") boolean demoMode,
         /* Fulfillment URL이 구매자를 보낼 프론트엔드 주소. 비어 있으면 상대 경로로 리디렉션 */
         @DefaultValue("") String webBaseUrl,
+        /* Marketplace 이벤트 수신 API(/api/internal/marketplace-events) 공유 비밀값 */
+        @DefaultValue("local-dev-event-secret") String eventSecret,
         @DefaultValue MockAws mockAws,
         @DefaultValue Entitlement entitlement,
         @DefaultValue Metering metering) {

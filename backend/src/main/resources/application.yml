@@ -10,6 +10,8 @@ app:
   demo-mode: true
   # Fulfillment URL이 구매자를 보낼 프론트엔드 주소. 비어 있으면 요청과 같은 origin으로 상대 리디렉션.
   web-base-url: ""
+  # Marketplace 이벤트 수신 API의 공유 비밀값 (실제 환경에서는 SQS 권한으로 대체)
+  event-secret: local-dev-event-secret
   mock-aws:
     # Mock AWS Marketplace API 주소. 비어 있으면 이 서버 자신(http://localhost:${server.port}).
     base-url: ""

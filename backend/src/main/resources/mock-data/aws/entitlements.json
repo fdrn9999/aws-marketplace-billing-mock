@@ -1,0 +1,5 @@
+[
+  { "licenseArn": "arn:aws:license-manager::222222222222:license:l-contract-active", "dimension": "analysis_run", "integerValue": 100, "expirationDate": "now+6d" },
+  { "licenseArn": "arn:aws:license-manager::333333333333:license:l-hybrid-overage", "dimension": "analysis_run", "integerValue": 50, "expirationDate": "now+300d" },
+  { "licenseArn": "arn:aws:license-manager::444444444444:license:l-contract-expired", "dimension": "analysis_run", "integerValue": 100, "expirationDate": "now-3d" }
+]

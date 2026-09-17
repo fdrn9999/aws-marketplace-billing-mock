@@ -1,0 +1,24 @@
+[
+  {
+    "productCode": "prod-usage-001",
+    "pricingModel": "SUBSCRIPTION",
+    "meteringDimensions": ["analysis_run", "data_gb"],
+    "contractDimensions": []
+  },
+  {
+    "productCode": "prod-contract-001",
+    "pricingModel": "CONTRACT",
+    "meteringDimensions": [],
+    "contractDimensions": [
+      { "dimension": "analysis_run", "quantity": 100, "durationDays": 365 }
+    ]
+  },
+  {
+    "productCode": "prod-hybrid-001",
+    "pricingModel": "CONTRACT_WITH_SUBSCRIPTION",
+    "meteringDimensions": ["analysis_run"],
+    "contractDimensions": [
+      { "dimension": "analysis_run", "quantity": 50, "durationDays": 365 }
+    ]
+  }
+]
